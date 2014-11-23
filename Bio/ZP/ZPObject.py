@@ -3,7 +3,7 @@
 
 class ZPObject():
 
-	def __init__(self, filename=None, regionList=None, segmentSize=1000, changeAllowance=0.1):
+	def __init__(self, filename=None, regionDict=None, segmentSize=1000, changeAllowance=0.1):
 		
 
 	def getSegmentSize(self):
