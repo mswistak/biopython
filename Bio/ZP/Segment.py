@@ -21,9 +21,9 @@ class Segment:
 
 
 	def getSequence(self, start=0, end=None):
-		if not end:
+		if end == None:
 			end = self.segmentSize
-		if self.sequence:
+		if self.sequence != None:
 			return self.sequence[start:end]
 		else:
 			with tarfile.open(self.archivePath, "r") as tar:
@@ -33,11 +33,11 @@ class Segment:
 
 
 	def setSequence(self, newSeq, start=0, end=None):
-		if not end:
+		if end == None:
 			end = self.segmentSize
 		seq = self.getSequence()
 		
-		if not self.sequence:
+		if self.sequence == None:
 			with tarfile.open(self.archivePath, "r") as tar:
 				tar.extract(self.segmentName)
 			os.remove(self.segmentName)
