@@ -2,7 +2,7 @@ import tarfile, zlib, os
 import cPickle as pickle
 
 
-class Segment:
+class Segment(object):
 
 	def __init__(self, archivePath, segmentName, maxSegmentSize, sequence):
 		self.archivePath = archivePath
@@ -10,6 +10,17 @@ class Segment:
 		self.maxSegmentSize = maxSegmentSize
 		self.sequence = sequence
 		self.segmentSize = len(sequence)
+
+
+	def setPath(self, archivePath):
+		if self.sequence == None:
+			self.sequence = self.getSequence()
+
+			with tarfile.open(self.archivePath, "r") as tar:
+				tar.extract(self.segmentName)
+			os.remove(self.segmentName)
+
+		self.archivePath = archivePath
 
 
 	def getSize(self):
@@ -23,6 +34,7 @@ class Segment:
 	def getSequence(self, start=0, end=None):
 		if end == None:
 			end = self.segmentSize
+
 		if self.sequence != None:
 			return self.sequence[start:end]
 		else:
