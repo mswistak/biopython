@@ -1,7 +1,7 @@
-import Segment
+from Segment import Segment
 
 
-class Region:
+class Region(object):
 
 	def __init__(self, archivePath, regionName, maxSegmentSize=1000, sequence=None):
 		self.archivePath = archivePath
@@ -23,7 +23,7 @@ class Region:
 			if end > length:
 				end = length
 
-			self.segmentList += [Segment.Segment(self.archivePath, self.regionName + "_seg_" + str(1+i+self.lastIdx), self.maxSegmentSize, sequence[start:end])] 
+			self.segmentList += [Segment(self.archivePath, self.regionName + "_seg_" + str(1+i+self.lastIdx), self.maxSegmentSize, sequence[start:end])] 
 		self.lastIdx = i
 
 
@@ -39,33 +39,63 @@ class Region:
 		return self.regionName
 
 
+	def setMaxSegmentSize(self, size):
+		if self.maxSegmentSize != size:
+			sequence = self.getSequence()
+			self.delAllSegments()
+			self.maxSegmentSize = size
+			self.__createNewSegments(sequence)
+
+
+	def setPath(self, archivePath):
+		if self.archivePath != archivePath:
+			self.archivePath = archivePath
+			for seg in self.segmentList:
+				seg.setPath(archivePath)
+
+
 	def delSegment(self, idx):
 		if type(idx) == int:
 			idx = [idx]
-		for i in idx:
-			seg = self.segmentList[i]
-			seg.delSequence()
-		for i in sorted(idx, reverse=True):
-			self.segmentList = self.segmentList[:i] + self.segmentList[(i+1):]
+
+		nSegments = len(self.segmentList)
+		idx_plus = set([i+nSegments if i < 0 else i for i in idx])
+
+		for i in sorted(list(idx_plus), reverse=True):
+			if i < nSegments:
+				self.segmentList[i].delSequence()
+				self.segmentList = self.segmentList[:i] + self.segmentList[(i+1):]
 
 
 	def delAllSegments(self):
 		for seg in self.segmentList:
 			seg.delSequence()
 		self.segmentList = []
+		self.lastIdx = -1
 
 
 	def getSequence(self, start=0, end=None):
+		size = self.getSize()
 		if end == None:
-			end = self.getSize()
+			end = size
 
-		seq = ""
+		if start < 0:
+			start += size
+		elif start > size:
+			start = size-1
+
+		if end < 0:
+			end += size
+		elif end > size:
+			end = size
+
+		sequence = ""
 
 		if end:
 			segStart = start/self.maxSegmentSize
-			segEnd = end/self.maxSegmentSize
-			if self.segmentList[-1].getSize() != self.maxSegmentSize:
-				segEnd += 1
+			segEnd = 1 + end/self.maxSegmentSize
+			if end % self.maxSegmentSize == 0:
+				segEnd -= 1
 
 			for i in xrange(segStart, segEnd):
 				s = 0
@@ -74,26 +104,34 @@ class Region:
 					s = start - i*self.maxSegmentSize
 				if end < (i+1)*self.maxSegmentSize:
 					e = end - i*self.maxSegmentSize
-				seq += self.segmentList[i].getSequence(s, e)
+				sequence += self.segmentList[i].getSequence(s, e)
 
-		return seq
+		return sequence
 
 
 	def setSequence(self, sequence, start=0, end=None):
+		size = self.getSize()
 		if end == None:
-			end = self.getSize()
+			end = size
 
 		if start < 0:
-			start = start + self.getSize()
+			start += size
+		elif start > size:
+			start = size-1
 
-		diffLen = len(sequence) - (end-start)
+		if end < 0:
+			end += size
+		elif end > size:
+			end = size
+
+		seqLen = len(sequence)
+		diffLen = seqLen - (end-start)
 		i = -1
 
 		if self.segmentList:
 			segStart = start/self.maxSegmentSize
 			segEnd = 1 + end/self.maxSegmentSize
-
-			if self.segmentList[-1].getSize() == self.maxSegmentSize:
+			if end % self.maxSegmentSize == 0:
 				segEnd -= 1
 
 			for i in xrange(segStart, segEnd):
@@ -119,27 +157,15 @@ class Region:
 				self.__createNewSegments(sequence)
 		else:
 			if diffLen < 0:
-				for j in xrange(segEnd-1, len(self.segmentList)):
+				segAdd = (start + seqLen)/self.maxSegmentSize
+				for j in xrange(segAdd+1, len(self.segmentList)):
 					sequence += self.segmentList[j].getSequence()
 
-					sequence = self.segmentList[segStart].appendSequence(sequence)
+				sequence = self.segmentList[segAdd].appendSequence(sequence)
 
-				for j in xrange(segStart+1, len(self.segmentList)):
+				for j in xrange(segAdd+1, len(self.segmentList)):
 					sequence = self.segmentList[j].setSequence(sequence)
 
-
-				
-
-
-#			if self.segmentList[i].getSize() < self.maxSegmentSize:
-#				for j in xrange(i+1, len(self.segmentList)):
-#					sequence += self.segmentList[j].getSequence()
-#
-#				sequence = self.segmentList[i].appendSequence(sequence)
-#
-#				for j in xrange(i+1, len(self.segmentList)):
-#					sequence = self.segmentList[j].setSequence(sequence)
-#
 				for j in xrange(len(self.segmentList)-1, -1, -1):
 					if self.segmentList[j].getSize() == 0:
 						self.delSegment(j)
