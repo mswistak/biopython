@@ -57,7 +57,7 @@ class Region(object):
 
 	def _setPath(self, archivePath):
 		"""Change archivePath for Region and all Segments consisting it.
-		Private meth d used only after loading a ZPObject to ensure that
+		Private method used only after loading a ZPObject to ensure that
 		sequences will be extracted from the appropriate archive even if
 		it has been renamed or moved in the filesystem."""
 
