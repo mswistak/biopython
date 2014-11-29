@@ -15,7 +15,7 @@ class Segment(object):
 		self._segmentName = str(segmentName)
 		self._maxSegmentSize = int(maxSegmentSize)
 		self._sequence = str(sequence)
-		self._segmentSize = len(sequence)
+		self._segmentSize = len(self._sequence)
 
 
 	def _setPath(self, archivePath):
@@ -34,7 +34,8 @@ class Segment(object):
 		command is invoked."""
 
 		#if sequence is saved in the filesystem
-		if self._sequence == None:
+		#and archivePath is different than before
+		if self._sequence == None and self._archivePath != archivePath:
 			#keep sequence explicitly in Segment instance
 			self._sequence = self.getSequence()
 
@@ -88,7 +89,7 @@ class Segment(object):
 
 	def setSequence(self, newSeq, start=0, end=None):
 		"""Change sequence (or subsequence) kept in Segment. Results in
-		removal of file containing the sequence from old archive and from
+		removal of file containing the sequence from archive and from
 		the filesystem. Sequence will be stored as an attribute in the
 		Segment object until save command is invoked. In case changed
 		sequence is longer than maximal Segment size, this fuction returns
