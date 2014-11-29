@@ -19,8 +19,8 @@ class ZPObject(object):
 		self._maxSegmentSize = int(maxSegmentSize)
 		self._saved = False
 
-		if regionDict == None or type(regionDict) != dict:
-			regionDict = {}
+		if regionDict is None or type(regionDict) != dict:
+			self._regionDict = {}
 
 
 	def _setPath(self, archivePath):
@@ -142,7 +142,7 @@ class ZPObject(object):
 					self._maxSegmentSize, \
 					sequence)
 		else:
-			raise ValueError("Region %s already exists." % region.getName())
+			raise ValueError("Region %s already exists." % regionName)
 
 
 	def addRegion(self, region):
@@ -209,13 +209,13 @@ class ZPObject(object):
 			self.createRegion(regionName, sequence)
 		
 
-	def delSequence(self, sequence, regionName):
+	def delSequence(self, regionName, start=0, end=None):
 		"""Delete sequence from a Region."""
 
 		try:
-			self._regionDict[regionName].delSequence(sequence)
+			self._regionDict[regionName].delSequence(start, end)
 		except KeyError:
-			self.createRegion(regionName, sequence)
+			raise KeyError("Region %s does not exist." % regionName)
 		
 
 	def save(self):
